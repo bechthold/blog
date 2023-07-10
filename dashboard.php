@@ -2,19 +2,21 @@
 #**********************************************************************************#
 // region page configuration
 
-#****************************************#
-#********** PAGE CONFIGURATION **********#
-#****************************************#
+            #****************************************#
+            #********** PAGE CONFIGURATION **********#
+            #****************************************#
 
-/*
-    include(Pfad zur Datei): Bei Fehler wird das Skript weiter ausgeführt. Problem mit doppelter Einbindung derselben Datei
-    require(Pfad zur Datei): Bei Fehler wird das Skript gestoppt. Problem mit doppelter Einbindung derselben Datei
-    include_once(Pfad zur Datei): Bei Fehler wird das Skript weiter ausgeführt. Kein Problem mit doppelter Einbindung derselben Datei
-    require_once(Pfad zur Datei): Bei Fehler wird das Skript gestoppt. Kein Problem mit doppelter Einbindung derselben Datei
-*/
-require_once('./include/config.inc.php');
-require_once('./include/form.inc.php');
-require_once('./include/db.inc.php');
+            /*
+                include(Pfad zur Datei): Bei Fehler wird das Skript weiter ausgeführt. Problem mit doppelter Einbindung derselben Datei
+                require(Pfad zur Datei): Bei Fehler wird das Skript gestoppt. Problem mit doppelter Einbindung derselben Datei
+                include_once(Pfad zur Datei): Bei Fehler wird das Skript weiter ausgeführt. Kein Problem mit doppelter Einbindung derselben Datei
+                require_once(Pfad zur Datei): Bei Fehler wird das Skript gestoppt. Kein Problem mit doppelter Einbindung derselben Datei
+            */
+            require_once('./include/config.inc.php');
+            require_once('./include/form.inc.php');
+            require_once('./include/db.inc.php');
+            require_once('./include/dateTime.inc.php');
+
 
 // endregion page configuration
 #**********************************************************************************#
@@ -61,7 +63,7 @@ if( ob_start() === false ) {
             Für die Fortsetzung der Session muss hier der gleiche Name ausgewählt werden,
             wie beim Login-Vorgang, damit die Seite weiß, welches Cookie sie vom Client auslesen soll
         */
-        session_name('authentication');
+        session_name(SESSION_NAME);
 
         #********** START/CONTINUE SESSION **********#
         /*
@@ -119,6 +121,9 @@ if(DEBUG)	echo "<p class='debug auth err'><b>Line " . __LINE__ . "</b>: Login ko
             */
             session_destroy();
 
+            // Flag zur weiteren Verwendung setzen
+            $loggedIn = false;
+
             // 2. User auf öffentliche Seite umleiten
             /*
                 Die Funktion header() versendet sofort den HTTP-Header an den Client.
@@ -152,6 +157,9 @@ if(DEBUG)	echo "<p class='debug auth ok'><b>Line " . __LINE__ . "</b>: Login wur
             session_regenerate_id(true);
 
             $userID = $_SESSION['ID'];
+
+            // Flag zur weiteren Verwendung setzen
+            $loggedIn = true;
         }
 
 // endregion regenerate session ID
@@ -180,6 +188,52 @@ if(DEBUG_V)	echo "</pre>";
 
 // endregion system array $_SERVER
 #**********************************************************************************#
+// region process URL parameters
+
+#********************************************#
+#********** PROCESS URL PARAMETERS **********#
+#********************************************#
+
+#********** PREVIEW GET ARRAY **********#
+/*
+if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$_GET <i>(" . basename(__FILE__) . ")</i>:<br>\n";
+if(DEBUG_V)	print_r($_GET);
+if(DEBUG_V)	echo "</pre>";
+*/
+#****************************************#
+
+// Schritt 1 URL: Prüfen, ob Parameter übergeben wurde
+if (isset($_GET['action']) === true) {
+    if(DEBUG)	echo "<p class='debug'>🧻 <b>Line " . __LINE__ . "</b>: URL-Parameter 'action' wurde übergeben. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+    // Schritt 2 URL: Parameterwert auslesen, entschärfen, DEBUG-Ausgabe
+    if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Parameterwert wird ausgelesen und entschärft... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+    $action = sanitizeString($_GET['action']);
+    if(DEBUG_V)	echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$action: $action <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+    // Schritt 3 URL: Je nach erlaubtem(!) Parameterwert verzweigen
+
+    #********** LOGOUT **********#
+    if ($action === 'logout') {
+        if(DEBUG)		echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Logout wird durchgeführt... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+        // Schritt 4 URL: Parameterwert weiterverarbeiten (in jedem Zweig individuell)
+
+        #********** PROCESS LOGOUT **********#
+        // 1. Session löschen
+        session_destroy();
+
+        // 2. User auf öffentliche Seite umleiten
+        header('LOCATION: index.php');
+
+        // 3. Fallback, falls die Umleitung per HTTP-Header ausgehebelt werden sollte
+        exit();
+    } // BRANCHING END
+} // PROCESS URL PARAMETERS END
+
+// endregion process URL parameters
+#**********************************************************************************#
 ?>
 
 <!doctype html>
@@ -189,25 +243,65 @@ if(DEBUG_V)	echo "</pre>";
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authentication - Registration</title>
+    <title>Articles</title>
 
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/debug.css">
+
+    <style>
+        main {
+            width: 60%;
+        }
+        aside {
+            width: 30%;
+            padding: 20px;
+            border-left: 1px solid gray;
+            opacity: 0.6;
+            overflow: hidden;
+        }
+    </style>
 
 </head>
 
 <body>
 
 <!-- -------- PAGE HEADER START -------- -->
+<br>
+<header class="fright">
 
+    <!-- -------- LINKS START -------- -->
+    <?php if($loggedIn === true): ?>
+        <p><a href="?action=logout">Logout</a></p>
+        <p><a href="index.php"><< zum Frontend</a></p>
+
+    <?php endif ?>
+    <!-- -------- LINKS END -------- -->
+</header>
+<div class="clearer"></div>
+
+<hr>
 <!-- -------- PAGE HEADER END -------- -->
 
-<h1>Dashboard</h1>
+<main class="fleft">
+    <h1>Dashboard - Articles</h1>
 
 
-<!-- -------- USER MESSAGES START -------- -->
+    <!-- -------- USER MESSAGES START -------- -->
+    <?php if(isset($error)): ?>
+        <h4 class="error"><?php echo $error ?></h4>
+    <?php elseif(isset($success)): ?>
+        <h4 class="success"><?php echo $success ?></h4>
+    <?php elseif(isset($info)): ?>
+        <h4 class="info"><?php echo $info ?></h4>
+    <?php endif ?>
+    <!-- -------- USER MESSAGES END -------- -->
 
-<!-- -------- USER MESSAGES END -------- -->
+</main>
+
+<aside class="fright">
+    <h1>Dashboard - Categories</h1>
+
+</aside>
 
 <br>
 <br>
