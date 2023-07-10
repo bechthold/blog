@@ -48,7 +48,7 @@ pre {
 
 
 /********** FUNCTIONS AND METHODS **********/
-.class,.trait,.debugClassLoader, {
+.class,.trait,.debugClassLoader {
 	font-family: courier new;
 	font-size: 0.9em;
 }
