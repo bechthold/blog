@@ -32,6 +32,10 @@
 				define('DB_NAME',								'blogproject');
 				define('DB_USER',								'root');
 				define('DB_PWD',								'');
+
+
+                #********** SESSION CONFIGURATION **********#
+                define('SESSION_NAME',                         'blog');
 				
 				
 				#********** EXTERNAL STRING INPUT CONFIGURATION **********#
