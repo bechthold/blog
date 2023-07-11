@@ -170,7 +170,21 @@ if(DEBUG)	echo "<p class='debug auth ok'><b>Line " . __LINE__ . "</b>: Login wur
 #********** INITIALIZE VARIABLES **********#
 #******************************************#
 
-$errorLogin = NULL;
+            $userFirstName                      = $_SESSION['userFirstName'];
+            $userLastName                       = $_SESSION['userLastName'];
+
+            $newArticleCategory                 = NULL;
+            $newArticleTitle                    = NULL;
+            $newArticlePictureAlignment             = NULL;
+            $newArticleText                     = NULL;
+
+            $errorNewArticleImageUpload         = NULL;
+            $errorNewArticleText                = NULL;
+            $errorNewArticleTitle               = NULL;
+
+            $error				                = NULL;
+            $info				                = NULL;
+            $success			                = NULL;
 
 // endregion initialize variable
 #**********************************************************************************#
@@ -234,6 +248,247 @@ if (isset($_GET['action']) === true) {
 
 // endregion process URL parameters
 #**********************************************************************************#
+// region fetch categories from DB
+
+        #******************************************************#
+        #********** PROCESS FETCH CATEGORIES FROM DB **********#
+        #******************************************************#
+
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Categories aus DB aus... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+        // Schritt 1 DB: DB-Verbindung herstellen
+        $PDO = dbConnect(DB_NAME);
+
+        // Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
+        $sql            = 'SELECT catID, catLabel FROM categories';
+
+        $params         = array();
+
+        // Schritt 3 DB: Prepared Statements
+        try {
+            $PDOStatement = $PDO->prepare($sql);
+
+            // Execute: SQL-Statement ausführen und ggf. Platzhalter füllen
+            $PDOStatement->execute($params);
+
+        } catch(PDOException $error) {
+if(DEBUG) 	echo "<p class='debug db err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
+            $dbError = 'Fehler beim Zugriff auf die Datenbank!';
+        }
+
+        // Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
+        /*
+            Bei lesenden Operationen wie SELECT und SELECT COUNT:
+            Abholen der Datensätze bzw. auslesen des Ergebnisses
+        */
+        $categories = $PDOStatement->fetchAll(PDO::FETCH_ASSOC);
+
+/*
+if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$categories <i>(" . basename(__FILE__) . ")</i>:<br>\n";
+if(DEBUG_V)	print_r($categories);
+if(DEBUG_V)	echo "</pre>";
+*/
+
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Categories aus DB aus... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+
+// DB-Verbindung schließen
+if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
+        unset($PDO);
+
+// endregion fetch categories from DB
+#**********************************************************************************#
+// region process new article form
+
+            #**********************************************#
+            #********** PROCESS NEW ARTICLE FORM **********#
+            #**********************************************#
+
+            #********** PREVIEW POST ARRAY **********#
+
+if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$_POST <i>(" . basename(__FILE__) . ")</i>:<br>\n";
+if(DEBUG_V)	print_r($_POST);
+if(DEBUG_V)	echo "</pre>";
+
+            #****************************************#
+
+            // Schritt 1 FORM: Prüfen, ob Formular abgeschickt wurde
+            if (isset($_POST['newArticleForm']) === true) {
+if(DEBUG)	echo "<p class='debug'>🧻 <b>Line " . __LINE__ . "</b>: Formular 'New Article' wurde abgeschickt. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            // Schritt 2 FORM: Formulardaten auslesen, entschärfen, DEBUG-Ausgabe
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Daten werden ausgelesen und entschärft... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            $newArticleCategory         = sanitizeString($_POST['newArticleCategory']);
+            $newArticleTitle            = sanitizeString($_POST['newArticleTitle']);
+            $newArticlePictureAlignment     = sanitizeString($_POST['newArticlePictureAlignment']);
+            $newArticleText             = sanitizeString($_POST['newArticleText']);
+
+if(DEBUG_V)	echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$newArticleCategory: $newArticleCategory <i>(" . basename(__FILE__) . ")</i></p>\n";
+if(DEBUG_V)	echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$newArticleTitle: $newArticleTitle <i>(" . basename(__FILE__) . ")</i></p>\n";
+if(DEBUG_V)	echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$newArticlePictureAlignment: $newArticlePictureAlignment <i>(" . basename(__FILE__) . ")</i></p>\n";
+if(DEBUG_V)	echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$newArticleText: $newArticleText <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+
+
+
+            // Schritt 3 FORM: Feldvalidierung, Feldvorbelegung, Final Form Validation
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Feldwerte werden validiert... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            $errorNewArticleTitle = validateInputString($newArticleTitle, mandatory: true, maxLength: INPUT_MAX_LENGTH_SHORT_TEXT);
+            $errorNewArticleText = validateInputString($newArticleText, mandatory: true, maxLength: INPUT_MAX_LENGTH_LONG_TEXT);
+            }
+
+
+            #********** FORM VALIDATION (FIELDS VALIDATION) **********#
+            if($errorNewArticleTitle !== NULL OR $errorNewArticleText !== NULL) {
+            // Fehlerfall
+if(DEBUG)	echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: Das Formular enthält noch Fehler! <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            } else {
+            // Erfolgsfall
+if(DEBUG)	echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Das Formular ist formal fehlerfrei. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            #**********************************#
+            #********** IMAGE UPLOAD **********#
+            #**********************************#
+            /*
+                Da im Fall von fehlerhaften Formulareingaben kein verwaistes Bild auf
+                den Server hochgeladen werden soll, findet der Bildupload erst NACH
+                der finalen Formularvalidierung statt.
+            */
+
+
+if(DEBUG_V)		echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$_FILES <i>(" . basename(__FILE__) . ")</i>:<br>\n";
+if(DEBUG_V)		print_r($_FILES);
+if(DEBUG_V)		echo "</pre>";
+
+            #********** CHECK IF IMAGE UPLOAD IS ACTIVE **********#
+            if ($_FILES['newArticlePicture']['tmp_name'] === '') {
+                // Image Upload inactive
+if(DEBUG)		echo "<p class='debug hint'><b>Line " . __LINE__ . "</b>: Image Upload inactive. <i>(" . basename(__FILE__) . ")</i></p>\n";
+            } else {
+                // Image Upload active
+if(DEBUG)	    echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Image Upload active. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+                $validateImageUploadReturnArray = validateImageUpload($_FILES['newArticlePicture']['tmp_name']);
+
+
+if(DEBUG_V)		echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$validateImageUploadReturnArray <i>(" . basename(__FILE__) . ")</i>:<br>\n";
+if(DEBUG_V)		print_r($validateImageUploadReturnArray);
+if(DEBUG_V)		echo "</pre>";
+
+
+                #********** VALIDATE IMAGE UPLOAD **********#
+                if ($validateImageUploadReturnArray['imageError'] !== NULL ){
+                    // Fehlerfall
+                    /*
+                        AUSNAHMEFEHLER in PHP: Wenn innerhalb eines Strings auf einen assoziativen Index
+                        zugegriffen wird, entfallen die Anführungszeichen für den Index.
+                    */
+if(DEBUG)		echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: FEHLER beim Bildupload: $validateImageUploadReturnArray[imageError] <i>(" . basename(__FILE__) . ")</i></p>\n";
+                $errorNewArticleImageUpload = $validateImageUploadReturnArray['imageError'];
+
+                } else {
+                    // Erfolgsfall
+                    /*
+                        AUSNAHMEFEHLER in PHP: Wenn innerhalb eines Strings auf einen assoziativen Index
+                        zugegriffen wird, entfallen die Anführungszeichen für den Index.
+                    */
+if(DEBUG)			echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Bild erfolgreich nach <i>'$validateImageUploadReturnArray[imagePath]'</i> auf den Server geladen. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+
+                    #********** SAVE IMAGE PATH TO VARIABLE **********#
+                    $newArticlePicturePath = $validateImageUploadReturnArray['imagePath'];
+                } // VALIDATE IMAGE UPLOAD END
+            } // IMAGE UPLOAD END
+        } //FORM VALIDATION (FIELDS VALIDATION) END
+        #*****************************************************#
+
+
+        #********** FINAL FORM NEW ARTICLE VALIDATION (AFTER IMAGE UPLOAD) **********#
+        if( $errorNewArticleImageUpload !== NULL ) {
+            // Fehlerfall
+if(DEBUG)	echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: Das Formular enthält noch Fehler! <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+        } else {
+            // Erfolgsfall
+if (DEBUG)  echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Das Formular ist komplett fehlerfrei. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            // Schritt 4 FORM: Formulardaten weiterverarbeiten
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Formulardaten werden weiterverarbeitet... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+
+        #********** CREATE NEW ARTICLE IN DB **********#
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Speichere New Article Daten in die DB... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            // Schritt 1 DB: DB-Verbindung herstellen
+            $PDO = dbConnect(DB_NAME);
+
+            // Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
+            $sql        =   'INSERT INTO blogs 
+                            (blogHeadLine, blogImagePath, blogImageAlignment, blogContent, catID, userID)
+                            VALUES
+                            (:blogHeadLine,  :blogImagePath, :blogImageAlignment, :blogContent, :catID, :userID)';
+
+            $params     = array(
+                'blogHeadLine' => $newArticleTitle,
+                'blogImagePath' => $newArticlePicturePath,
+                'blogImageAlignment' => $newArticlePictureAlignment,
+                'blogContent' => $newArticleText,
+                'catID' => $newArticleCategory,
+                'userID' => $userID
+            );
+
+            // Schritt 3 DB: Prepared Statements
+            try {
+                // Prepare: SQL-Statement vorbereiten
+                $PDOStatement = $PDO->prepare($sql);
+
+                // Execute: SQL-Statement ausführen und ggf. Platzhalter füllen
+                $PDOStatement->execute($params);
+
+            } catch(PDOException $error) {
+                if(DEBUG) 						echo "<p class='debug db err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
+                $error = 'Es ist ein Fehler aufgetreten! Bitte versuchen Sie es später noch einmal.';
+            }
+
+            // Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
+            /*
+                Bei schreibenden Operationen (INSERT/UPDATE/DELETE):
+                Schreiberfolg prüfen anhand der Anzahl der betroffenen Datensätze (number of affected rows).
+                Diese werden über die PDOStatement-Methode rowCount() ausgelesen.
+                Der Rückgabewert von rowCount() ist ein Integer; wurden keine Daten verändert, wird 0 zurückgeliefert.
+            */
+            $rowCount = $PDOStatement->rowCount();
+if(DEBUG_V)	echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$rowCount: $rowCount <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            if( $rowCount !== 1 ) {
+                // Fehlerfall
+                if(DEBUG)		echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: FEHLER beim Speichern der New Article Daten! <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+                // Fehlermeldung für User generieren
+                $dbError = 'Es ist ein Fehler aufgetreten! Bitte versuchen Sie es später noch einmal.';
+
+            } else {
+                // Erfolgsfall
+                /*
+                    Bei einem INSERT die Last-Insert-ID nur nach geprüftem Schreiberfolg auslesen.
+                    Im Zweifelsfall wird hier sonst die zuletzt vergebene ID aus einem älteren
+                    Schreibvorgang zurückgeliefert.
+                */
+                $newArticleID = $PDO->lastInsertID();
+if (DEBUG) echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Userdatensatz erfolgreich unter ID $newArticleID gespeichert. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+
+                unset($PDO);
+            } // CREATE NEW ARTICLE IN DB END
+
+        } // FINAL FORM NEW ARTICLE VALIDATION (AFTER IMAGE UPLOAD) END
+
+// endregion process new article form
+#**********************************************************************************#
+
 ?>
 
 <!doctype html>
@@ -250,14 +505,10 @@ if (isset($_GET['action']) === true) {
 
     <style>
         main {
-            width: 60%;
+            width: 50%;
         }
         aside {
-            width: 30%;
-            padding: 20px;
-            border-left: 1px solid gray;
-            opacity: 0.6;
-            overflow: hidden;
+            width: 50%;
         }
     </style>
 
@@ -278,13 +529,10 @@ if (isset($_GET['action']) === true) {
     <!-- -------- LINKS END -------- -->
 </header>
 <div class="clearer"></div>
-
 <hr>
-<!-- -------- PAGE HEADER END -------- -->
 
-<main class="fleft">
-    <h1>Dashboard - Articles</h1>
-
+<h1>PHP-Project Blog - Dashboard</h1>
+<p>Aktiver Benutzer: <?= $userFirstName ?> <?= $userLastName ?></p>
 
     <!-- -------- USER MESSAGES START -------- -->
     <?php if(isset($error)): ?>
@@ -295,6 +543,50 @@ if (isset($_GET['action']) === true) {
         <h4 class="info"><?php echo $info ?></h4>
     <?php endif ?>
     <!-- -------- USER MESSAGES END -------- -->
+
+<!-- -------- PAGE HEADER END -------- -->
+
+<main class="fleft">
+    <h3>Neuen Blog-Eintrag verfassen</h3>
+
+    <!-- -------- FORM BLOG-EINTRAG -------- -->
+    <form action="" method="POST" enctype="multipart/form-data">
+
+        <input type="hidden" name="newArticleForm">
+
+        <select style="width: 80%; height: 2em; margin-bottom: 2em;" name="newArticleCategory" id="newArticleCategory">
+            <?php foreach($categories AS $category): ?>
+                <option value="<?= $category['catID']?>" <?php if ($newArticleCategory == $category['catID']) echo 'selected' ?>><?= $category['catLabel'] ?></option>
+            <?php endforeach ?>
+        </select>
+
+        <br>
+        <span class="error"><?= $errorNewArticleTitle ?></span><br>
+        <input type="text" name="newArticleTitle" placeholder="Uberschrift"><br>
+
+        <div style="width: 80%; display: inline-block">
+            <div style="display: inline-block">
+                <p>Bild hochladen:</p>
+                <span class="error"><?= $errorNewArticleImageUpload ?></span><br>
+                <input type="file" name="newArticlePicture"><br>
+            </div>
+
+            <select name="newArticlePictureAlignment">
+                <option value="align left" <?php if( $newArticlePictureAlignment === 'align left' ) echo 'selected'?>>align left</option>
+                <option value="align right" <?php if( $newArticlePictureAlignment === 'align right' ) echo 'selected'?>>align right</option>
+            </select>
+        </div>
+
+        <br>
+        <span class="error"><?php echo $errorNewArticleText ?></span><br>
+            <textarea name="newArticleText" placeholder="Text..."><?php echo $newArticleText ?></textarea>
+            <div class="clearer"></div>
+        <br>
+
+        <input style="width: 80%" type="submit" value="Veröffentlichen">
+
+    </form>
+
 
 </main>
 

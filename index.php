@@ -155,10 +155,11 @@ if(DEBUG)		echo "<p class='debug auth ok'><b>Line " . __LINE__ . "</b>: Seitenau
     #********** SYSTEM ARRAY $_SERVER **********#
     #*******************************************#
 /*
-if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$arrayName <i>(" . basename(__FILE__) . ")</i>:<br>\n";
+if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$_SERVER <i>(" . basename(__FILE__) . ")</i>:<br>\n";
 if(DEBUG_V)	print_r($_SERVER);
 if(DEBUG_V)	echo "</pre>";
 */
+
 
     // endregion system array $_SERVER
 #**********************************************************************************#
@@ -221,7 +222,7 @@ if(DEBUG)			echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Das Formular
                     $PDO = dbConnect(DB_NAME);
 
                     // Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
-                    $sql        = 'SELECT userID, userPassword FROM users 
+                    $sql        = 'SELECT userID, userPassword, userFirstName, userLastName FROM users 
                                     WHERE userEmail = :userEmail';
 
                     $params     = array('userEmail' => $userEmailForm);
@@ -324,6 +325,8 @@ if(DEBUG)					    echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: FEHLE
                                 #********** SAVE USER DATA INTO SESSION FILE **********#
                                 $_SESSION['ID'] = $row['userID'];
                                 $_SESSION['IPAddress'] = $_SERVER['REMOTE_ADDR'];
+                                $_SESSION['userFirstName'] = $row['userFirstName'];
+                                $_SESSION['userLastName'] = $row['userLastName'];
 
                                 if (DEBUG_V) echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$_SESSION <i>(" . basename(__FILE__) . ")</i>:<br>\n";
                                 if (DEBUG_V) print_r($_SESSION);
@@ -401,14 +404,10 @@ if(DEBUG)		echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Logout wird
 
     <style>
         main {
-            width: 60%;
+            width: 50%;
         }
         aside {
-            width: 30%;
-            padding: 20px;
-            border-left: 1px solid gray;
-            opacity: 0.6;
-            overflow: hidden;
+            width: 50%;
         }
     </style>
 

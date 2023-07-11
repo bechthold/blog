@@ -40,8 +40,9 @@
 				
 				#********** EXTERNAL STRING INPUT CONFIGURATION **********#
 				define('INPUT_MIN_LENGTH',					0);
-				define('INPUT_MAX_LENGTH',					256);
-				
+				define('INPUT_MAX_LENGTH_SHORT_TEXT',					256);
+				define('INPUT_MAX_LENGTH_LONG_TEXT',					65535);
+
 				
 				#********** IMAGE UPLOAD CONFIGURATION **********#
 				define('IMAGE_MAX_WIDTH',					800);

@@ -60,7 +60,7 @@ if(DEBUG_F)		echo "<p class='debug sanitizeString'>🌀 <b>Line " . __LINE__ . "
 				#********** VALIDATE INPUT STRING **********#
 				#*******************************************#
 				
-				function validateInputString($value, $mandatory=true, $minLength=INPUT_MIN_LENGTH, $maxLength=INPUT_MAX_LENGTH) {
+				function validateInputString($value, $mandatory=true, $minLength=INPUT_MIN_LENGTH, $maxLength=INPUT_MAX_LENGTH_SHORT_TEXT) {
 					#********** LOCAL SCOPE START **********#
 if(DEBUG_F)		echo "<p class='debug validateInputString'>🌀 <b>Line " . __LINE__ . "</b>: Aufruf " . __FUNCTION__ . "('$value' [$minLength | $maxLength]) <i>(" . basename(__FILE__) . ")</i></p>\n";
 					
