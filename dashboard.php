@@ -252,57 +252,6 @@ if (isset($_GET['action']) === true) {
 
 // endregion process URL parameters
 #**********************************************************************************#
-// region fetch categories from DB
-
-        #******************************************************#
-        #********** PROCESS FETCH CATEGORIES FROM DB **********#
-        #******************************************************#
-
-if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Categories aus DB aus... <i>(" . basename(__FILE__) . ")</i></p>\n";
-
-        // Schritt 1 DB: DB-Verbindung herstellen
-        $PDO = dbConnect(DB_NAME);
-
-        // Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
-        $sql            = 'SELECT catID, catLabel FROM categories';
-
-        $params         = array();
-
-        // Schritt 3 DB: Prepared Statements
-        try {
-            $PDOStatement = $PDO->prepare($sql);
-
-            // Execute: SQL-Statement ausführen und ggf. Platzhalter füllen
-            $PDOStatement->execute($params);
-
-        } catch(PDOException $error) {
-if(DEBUG) 	echo "<p class='debug db err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
-            $dbError = 'Fehler beim Zugriff auf die Datenbank!';
-        }
-
-        // Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
-        /*
-            Bei lesenden Operationen wie SELECT und SELECT COUNT:
-            Abholen der Datensätze bzw. auslesen des Ergebnisses
-        */
-        $categories = $PDOStatement->fetchAll(PDO::FETCH_ASSOC);
-
-/*
-if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$categories <i>(" . basename(__FILE__) . ")</i>:<br>\n";
-if(DEBUG_V)	print_r($categories);
-if(DEBUG_V)	echo "</pre>";
-*/
-
-if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Categories aus DB aus... <i>(" . basename(__FILE__) . ")</i></p>\n";
-
-
-// DB-Verbindung schließen
-if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
-
-        unset($PDO);
-
-// endregion fetch categories from DB
-#**********************************************************************************#
 // region process new article form
 
             #**********************************************#
@@ -310,11 +259,11 @@ if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung 
             #**********************************************#
 
             #********** PREVIEW POST ARRAY **********#
-
+/*
 if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$_POST <i>(" . basename(__FILE__) . ")</i>:<br>\n";
 if(DEBUG_V)	print_r($_POST);
 if(DEBUG_V)	echo "</pre>";
-
+*/
             #****************************************#
 
             // Schritt 1 FORM: Prüfen, ob Formular abgeschickt wurde
@@ -495,91 +444,158 @@ if(DEBUG) echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung 
 #**********************************************************************************#
 // region process new category form
 
-            #********** SAVE NEW CATEGORY **********#
-if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Speichern neue Kategorie in die DB... <i>(" . basename(__FILE__) . ")</i></p>\n";
+                #***********************************************#
+                #********** PROCESS NEW CATEGORY FORM **********#
+                #***********************************************#
 
-                // Schritt 1. DB-Verbindung herstellen
-                $PDO = dbConnect(DB_NAME);
+                #********** PREVIEW POST ARRAY **********#
+/*
+if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$_POST <i>(" . basename(__FILE__) . ")</i>:<br>\n";
+if(DEBUG_V)	print_r($_POST);
+if(DEBUG_V)	echo "</pre>";
+*/
+                #****************************************#
 
-                // Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
-				$sql 		= 'INSERT INTO categories
-								(catLabel)
-								VALUES
-								(:catLabel)';
+                // Schritt 1 FORM: Prüfen, ob Formular abgeschickt wurde
+                if( isset($_POST['newCategoryForm']) === true ) {
+if(DEBUG)		echo "<p class='debug'>🧻 <b>Line " . __LINE__ . "</b>: Formular 'New Category' wurde abgeschickt. <i>(" . basename(__FILE__) . ")</i></p>\n";
 
-				$params 	= array(
-                                    'catLabel'			=> $newCategoryName
-									);
+                // Schritt 2 FORM: Formulardaten auslesen, entschärfen, DEBUG-Ausgabe
+if(DEBUG)		echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Daten werden ausgelesen und entschärft... <i>(" . basename(__FILE__) . ")</i></p>\n";
 
-				// Schritt 3 DB: Prepared Statements
-				try {
-					// Prepare: SQL-Statement vorbereiten
-					$PDOStatement = $PDO->prepare($sql);
+                $newCategoryName 		= sanitizeString($_POST['newCategoryName']);
 
-					// Execute: SQL-Statement ausführen und ggf. Platzhalter füllen
-					$PDOStatement->execute($params);
+if(DEBUG_V)		echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$newCategoryName: $newCategoryName <i>(" . basename(__FILE__) . ")</i></p>\n";
 
-				} catch(PDOException $error) {
-if(DEBUG) 		echo "<p class='debug db err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
-					$dbError = 'Fehler beim Zugriff auf die Datenbank!';
-				}
+                // Schritt 3 FORM: Feldvalidierung, Feldvorbelegung, Final Form Validation
+if(DEBUG)		echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Feldwerte werden validiert... <i>(" . basename(__FILE__) . ")</i></p>\n";
 
+                $errorNewCategoryName = validateInputString($newCategoryName);
 
-
-
-
-
-
-
-
-                // Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
-                /*
-                    Bei schreibenden Operationen (INSERT/UPDATE/DELETE):
-                    Schreiberfolg prüfen anhand der Anzahl der betroffenen Datensätze (number of affected rows).
-                    Diese werden über die PDOStatement-Methode rowCount() ausgelesen.
-                    Der Rückgabewert von rowCount() ist ein Integer; wurden keine Daten verändert, wird 0 zurückgeliefert.
-                */
-                $rowCount = $PDOStatement->rowCount();
-if(DEBUG_V)	    echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$rowCount: $rowCount <i>(" . basename(__FILE__) . ")</i></p>\n";
-
-                if( $rowCount !== 1 ) {
+                if ($errorNewCategoryName !== NULL) {
                     // Fehlerfall
-if(DEBUG)		echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: FEHLER beim Speichern des Userdatensatzes! <i>(" . basename(__FILE__) . ")</i></p>\n";
-
-                    // Fehlermeldung für User generieren
-                    $dbError = 'Es ist ein Fehler aufgetreten! Bitte versuchen Sie es später noch einmal.';
-
+if(DEBUG)		    echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: Das Formular enthält noch Fehler! <i>(" . basename(__FILE__) . ")</i></p>\n";
                 } else {
                     // Erfolgsfall
+if(DEBUG)			echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Das Formular ist formal fehlerfrei. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+
+                    #********** CREATE NEW CATEGORY IN DB **********#
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Speichere New Category in die DB... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+                    // Schritt 1 DB: DB-Verbindung herstellen
+                    $PDO = dbConnect(DB_NAME);
+
+                    // Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
+                    $sql        =   'INSERT INTO categories 
+                            (catLabel)
+                            VALUES
+                            (:catLabel)';
+
+                    $params     = array(
+                        'catLabel' => $newCategoryName
+                    );
+
+                    // Schritt 3 DB: Prepared Statements
+                    try {
+                        // Prepare: SQL-Statement vorbereiten
+                        $PDOStatement = $PDO->prepare($sql);
+
+                        // Execute: SQL-Statement ausführen und ggf. Platzhalter füllen
+                        $PDOStatement->execute($params);
+
+                    } catch(PDOException $error) {
+if(DEBUG) 				echo "<p class='debug db err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
+                        $error = 'Es ist ein Fehler aufgetreten! Bitte versuchen Sie es später noch einmal.';
+                    }
+
+                    // Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
                     /*
-                        Bei einem INSERT die Last-Insert-ID nur nach geprüftem Schreiberfolg auslesen.
-                        Im Zweifelsfall wird hier sonst die zuletzt vergebene ID aus einem älteren
-                        Schreibvorgang zurückgeliefert.
+                        Bei schreibenden Operationen (INSERT/UPDATE/DELETE):
+                        Schreiberfolg prüfen anhand der Anzahl der betroffenen Datensätze (number of affected rows).
+                        Diese werden über die PDOStatement-Methode rowCount() ausgelesen.
+                        Der Rückgabewert von rowCount() ist ein Integer; wurden keine Daten verändert, wird 0 zurückgeliefert.
                     */
-                    $newUserID = $PDO->lastInsertID();
-if (DEBUG)      echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Userdatensatz erfolgreich unter ID$newUserID gespeichert. <i>(" . basename(__FILE__) . ")</i></p>\n";
+                    $rowCount = $PDOStatement->rowCount();
+if(DEBUG_V)	echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$rowCount: $rowCount <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+                    if( $rowCount !== 1 ) {
+                        // Fehlerfall
+if(DEBUG)		        echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: FEHLER beim Speichern der New Category Daten! <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+                        // Fehlermeldung für User generieren
+                        $dbError = 'Es ist ein Fehler aufgetreten! Bitte versuchen Sie es später noch einmal.';
+
+                    } else {
+                        // Erfolgsfall
+                        /*
+                            Bei einem INSERT die Last-Insert-ID nur nach geprüftem Schreiberfolg auslesen.
+                            Im Zweifelsfall wird hier sonst die zuletzt vergebene ID aus einem älteren
+                            Schreibvorgang zurückgeliefert.
+                        */
+                        $newArticleID = $PDO->lastInsertID();
+if (DEBUG)              echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Userdatensatz erfolgreich unter ID $newArticleID gespeichert. <i>(" . basename(__FILE__) . ")</i></p>\n";
 
 
-                }
+                        // DB-Verbindung schließen
+if(DEBUG)               echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
+                        unset($PDO);
+                    }
+                } // CREATE NEW CATEGORY IN DB END
+        } // PROCESS NEW CATEGORY FORM END
+// endregion process new category form
+#**********************************************************************************#
+// region fetch categories from DB
 
+#******************************************************#
+#********** PROCESS FETCH CATEGORIES FROM DB **********#
+#******************************************************#
 
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Categories aus DB aus... <i>(" . basename(__FILE__) . ")</i></p>\n";
 
+// Schritt 1 DB: DB-Verbindung herstellen
+$PDO = dbConnect(DB_NAME);
 
+// Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
+$sql            = 'SELECT catID, catLabel FROM categories';
 
+$params         = array();
 
+// Schritt 3 DB: Prepared Statements
+try {
+    $PDOStatement = $PDO->prepare($sql);
 
+    // Execute: SQL-Statement ausführen und ggf. Platzhalter füllen
+    $PDOStatement->execute($params);
 
+} catch(PDOException $error) {
+    if(DEBUG) 	echo "<p class='debug db err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
+    $dbError = 'Fehler beim Zugriff auf die Datenbank!';
+}
 
+// Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
+/*
+    Bei lesenden Operationen wie SELECT und SELECT COUNT:
+    Abholen der Datensätze bzw. auslesen des Ergebnisses
+*/
+$categories = $PDOStatement->fetchAll(PDO::FETCH_ASSOC);
 
+/*
+if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$categories <i>(" . basename(__FILE__) . ")</i>:<br>\n";
+if(DEBUG_V)	print_r($categories);
+if(DEBUG_V)	echo "</pre>";
+*/
 
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Categories aus DB aus... <i>(" . basename(__FILE__) . ")</i></p>\n";
 
 
 // DB-Verbindung schließen
-if(DEBUG) echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
-        unset($PDO);
-// endregion process new category form
-#**********************************************************************************#
+if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
 
+unset($PDO);
+
+// endregion fetch categories from DB
+#**********************************************************************************#
 ?>
 
 <!doctype html>
@@ -684,7 +700,7 @@ if(DEBUG) echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung 
 <aside class="fright">
     <h3>Neue Kategorie anlegen</h3>
 
-    <form action="" method="POST" enctype="text/plain">
+    <form action="" method="POST">
 
         <input type="hidden" name="newCategoryForm">
 
@@ -692,7 +708,6 @@ if(DEBUG) echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung 
         <input type="text" name="newCategoryName" placeholder="Name der Kategorie"><br>
 
         <input style="width: 80%" type="submit" value="Neue Kategorie anlegen">
-
     </form>
 
 </aside>
