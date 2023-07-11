@@ -175,12 +175,16 @@ if(DEBUG)	echo "<p class='debug auth ok'><b>Line " . __LINE__ . "</b>: Login wur
 
             $newArticleCategory                 = NULL;
             $newArticleTitle                    = NULL;
-            $newArticlePictureAlignment             = NULL;
+            $newArticlePictureAlignment         = NULL;
             $newArticleText                     = NULL;
+
+            $newCategoryName                    = NULL;
 
             $errorNewArticleImageUpload         = NULL;
             $errorNewArticleText                = NULL;
             $errorNewArticleTitle               = NULL;
+
+            $errorNewCategoryName               = NULL;
 
             $error				                = NULL;
             $info				                = NULL;
@@ -294,6 +298,7 @@ if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Categor
 
 // DB-Verbindung schließen
 if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
         unset($PDO);
 
 // endregion fetch categories from DB
@@ -337,7 +342,6 @@ if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Feldwerte we
 
             $errorNewArticleTitle = validateInputString($newArticleTitle, mandatory: true, maxLength: INPUT_MAX_LENGTH_SHORT_TEXT);
             $errorNewArticleText = validateInputString($newArticleText, mandatory: true, maxLength: INPUT_MAX_LENGTH_LONG_TEXT);
-            }
 
 
             #********** FORM VALIDATION (FIELDS VALIDATION) **********#
@@ -481,12 +485,99 @@ if(DEBUG_V)	echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$rowCoun
 if (DEBUG) echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Userdatensatz erfolgreich unter ID $newArticleID gespeichert. <i>(" . basename(__FILE__) . ")</i></p>\n";
 
 
+                // DB-Verbindung schließen
+if(DEBUG) echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
                 unset($PDO);
             } // CREATE NEW ARTICLE IN DB END
-
         } // FINAL FORM NEW ARTICLE VALIDATION (AFTER IMAGE UPLOAD) END
-
+    } // PROCESS NEW ARTICLE FORM END
 // endregion process new article form
+#**********************************************************************************#
+// region process new category form
+
+            #********** SAVE NEW CATEGORY **********#
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Speichern neue Kategorie in die DB... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+                // Schritt 1. DB-Verbindung herstellen
+                $PDO = dbConnect(DB_NAME);
+
+                // Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
+				$sql 		= 'INSERT INTO categories
+								(catLabel)
+								VALUES
+								(:catLabel)';
+
+				$params 	= array(
+                                    'catLabel'			=> $newCategoryName
+									);
+
+				// Schritt 3 DB: Prepared Statements
+				try {
+					// Prepare: SQL-Statement vorbereiten
+					$PDOStatement = $PDO->prepare($sql);
+
+					// Execute: SQL-Statement ausführen und ggf. Platzhalter füllen
+					$PDOStatement->execute($params);
+
+				} catch(PDOException $error) {
+if(DEBUG) 		echo "<p class='debug db err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
+					$dbError = 'Fehler beim Zugriff auf die Datenbank!';
+				}
+
+
+
+
+
+
+
+
+
+                // Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
+                /*
+                    Bei schreibenden Operationen (INSERT/UPDATE/DELETE):
+                    Schreiberfolg prüfen anhand der Anzahl der betroffenen Datensätze (number of affected rows).
+                    Diese werden über die PDOStatement-Methode rowCount() ausgelesen.
+                    Der Rückgabewert von rowCount() ist ein Integer; wurden keine Daten verändert, wird 0 zurückgeliefert.
+                */
+                $rowCount = $PDOStatement->rowCount();
+if(DEBUG_V)	    echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$rowCount: $rowCount <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+                if( $rowCount !== 1 ) {
+                    // Fehlerfall
+if(DEBUG)		echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: FEHLER beim Speichern des Userdatensatzes! <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+                    // Fehlermeldung für User generieren
+                    $dbError = 'Es ist ein Fehler aufgetreten! Bitte versuchen Sie es später noch einmal.';
+
+                } else {
+                    // Erfolgsfall
+                    /*
+                        Bei einem INSERT die Last-Insert-ID nur nach geprüftem Schreiberfolg auslesen.
+                        Im Zweifelsfall wird hier sonst die zuletzt vergebene ID aus einem älteren
+                        Schreibvorgang zurückgeliefert.
+                    */
+                    $newUserID = $PDO->lastInsertID();
+if (DEBUG)      echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Userdatensatz erfolgreich unter ID$newUserID gespeichert. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// DB-Verbindung schließen
+if(DEBUG) echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
+        unset($PDO);
+// endregion process new category form
 #**********************************************************************************#
 
 ?>
@@ -553,7 +644,7 @@ if (DEBUG) echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Userdatensatz
     <form action="" method="POST" enctype="multipart/form-data">
 
         <input type="hidden" name="newArticleForm">
-
+        <br>
         <select style="width: 80%; height: 2em; margin-bottom: 2em;" name="newArticleCategory" id="newArticleCategory">
             <?php foreach($categories AS $category): ?>
                 <option value="<?= $category['catID']?>" <?php if ($newArticleCategory == $category['catID']) echo 'selected' ?>><?= $category['catLabel'] ?></option>
@@ -591,7 +682,18 @@ if (DEBUG) echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Userdatensatz
 </main>
 
 <aside class="fright">
-    <h1>Dashboard - Categories</h1>
+    <h3>Neue Kategorie anlegen</h3>
+
+    <form action="" method="POST" enctype="text/plain">
+
+        <input type="hidden" name="newCategoryForm">
+
+        <span class="error"><?= $errorNewCategoryName ?></span><br>
+        <input type="text" name="newCategoryName" placeholder="Name der Kategorie"><br>
+
+        <input style="width: 80%" type="submit" value="Neue Kategorie anlegen">
+
+    </form>
 
 </aside>
 
