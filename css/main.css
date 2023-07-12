@@ -152,6 +152,14 @@ form.login {
 	height: 0px;
 }
 
+img.picture {
+	width: 150px;
+	height: 150px;
+	margin: 15px 15px 15px 0;
+	border: 1px solid lightgray;
+	padding: 5px;
+}
+
 /********** USER MESSAGES STYLES **********/
 .error {
 	color: red;

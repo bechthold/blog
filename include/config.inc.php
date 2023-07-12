@@ -39,7 +39,7 @@
 				
 				
 				#********** EXTERNAL STRING INPUT CONFIGURATION **********#
-				define('INPUT_MIN_LENGTH',					0);
+				define('INPUT_MIN_LENGTH',					            0);
 				define('INPUT_MAX_LENGTH_SHORT_TEXT',					256);
 				define('INPUT_MAX_LENGTH_LONG_TEXT',					65535);
 

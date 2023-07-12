@@ -176,6 +176,7 @@ if(DEBUG)	echo "<p class='debug auth ok'><b>Line " . __LINE__ . "</b>: Login wur
             $newArticleCategory                 = NULL;
             $newArticleTitle                    = NULL;
             $newArticlePictureAlignment         = NULL;
+            $newArticlePicturePath              = NULL;
             $newArticleText                     = NULL;
 
             $newCategoryName                    = NULL;
@@ -311,10 +312,11 @@ if(DEBUG)	echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Das Formular i
                 der finalen Formularvalidierung statt.
             */
 
-
+/*
 if(DEBUG_V)		echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$_FILES <i>(" . basename(__FILE__) . ")</i>:<br>\n";
 if(DEBUG_V)		print_r($_FILES);
 if(DEBUG_V)		echo "</pre>";
+*/
 
             #********** CHECK IF IMAGE UPLOAD IS ACTIVE **********#
             if ($_FILES['newArticlePicture']['tmp_name'] === '') {
@@ -326,11 +328,11 @@ if(DEBUG)	    echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Image Uplo
 
                 $validateImageUploadReturnArray = validateImageUpload($_FILES['newArticlePicture']['tmp_name']);
 
-
+/*
 if(DEBUG_V)		echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$validateImageUploadReturnArray <i>(" . basename(__FILE__) . ")</i>:<br>\n";
 if(DEBUG_V)		print_r($validateImageUploadReturnArray);
 if(DEBUG_V)		echo "</pre>";
-
+*/
 
                 #********** VALIDATE IMAGE UPLOAD **********#
                 if ($validateImageUploadReturnArray['imageError'] !== NULL ){
@@ -360,7 +362,7 @@ if(DEBUG)			echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Bild erfolgr
 
 
         #********** FINAL FORM NEW ARTICLE VALIDATION (AFTER IMAGE UPLOAD) **********#
-        if( $errorNewArticleImageUpload !== NULL ) {
+        if( $errorNewArticleImageUpload !== NULL OR $errorNewArticleTitle !== NULL OR $errorNewArticleText !== NULL) {
             // Fehlerfall
 if(DEBUG)	echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: Das Formular enthält noch Fehler! <i>(" . basename(__FILE__) . ")</i></p>\n";
 
@@ -434,9 +436,17 @@ if(DEBUG_V)	echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$rowCoun
 if (DEBUG) echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Userdatensatz erfolgreich unter ID $newArticleID gespeichert. <i>(" . basename(__FILE__) . ")</i></p>\n";
 
 
+
                 // DB-Verbindung schließen
 if(DEBUG) echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
                 unset($PDO);
+
+                $success = 'Der beitrag wurde erfolgreich gespeichert';
+
+                $newArticleTitle = NULL;
+                $newArticleText = NULL;
+
+
             } // CREATE NEW ARTICLE IN DB END
         } // FINAL FORM NEW ARTICLE VALIDATION (AFTER IMAGE UPLOAD) END
     } // PROCESS NEW ARTICLE FORM END
@@ -480,7 +490,57 @@ if(DEBUG)		    echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: Das Form
 if(DEBUG)			echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Das Formular ist formal fehlerfrei. <i>(" . basename(__FILE__) . ")</i></p>\n";
 
 
-                    #********** CREATE NEW CATEGORY IN DB **********#
+                    #********** CHECK IF CATEGORY IS ALREADY EXISTED **********#
+if(DEBUG)			echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Prüfe, ob die Kategorie bereits existiert ist... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+                    // Schritt 1 DB: DB-Verbinsung herstellen
+                    $PDO = dbConnect(DB_NAME);
+
+
+                    // Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
+                    $sql 		= 'SELECT COUNT(catLabel) FROM categories
+										WHERE catLabel = :catLabel';
+
+                    $params 	= array (
+                                        'catLabel' => $newCategoryName
+                                        );
+
+                    // Schritt 3 DB: Prepared Statements
+                    try {
+                        // Schritt 2 DB: SQL-Statement vorbereiten
+                        $PDOStatement = $PDO->prepare($sql);
+
+                        // Schritt 3 DB: SQL-Statement ausführen und ggf. Platzhalter füllen
+                        $PDOStatement->execute($params);
+
+                    } catch(PDOException $error) {
+if(DEBUG) 				echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
+                        $dbError = 'Fehler beim Zugriff auf die Datenbank!';
+                    }
+
+                    // Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
+                    /*
+                        Bei SELECT COUNT(): Rückgabewert von COUNT() über $PDOStatement->fetchColumn() auslesen
+                    */
+                    $count = $PDOStatement->fetchColumn();
+if(DEBUG_V)			echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$count: $count <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+                    // DB-Verbindung schließen
+                    if(DEBUG)			echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
+                    unset($PDO);
+
+
+                    #********** FORM VALIDATION (DB VALIDATION) **********#
+                    if( $count !== 0 ) {
+                        // Fehlerfall
+                        if(DEBUG)				echo "<p class='debug err'><b>Line " . __LINE__ . "</b>: Die Kategorie '$newCategoryName' ist bereits existiert! <i>(" . basename(__FILE__) . ")</i></p>\n";
+                        $errorNewCategoryName = 'Diese Kategorie ist bereits existiert!';
+
+                    } else {
+                        // Erfolgsfall
+                        if (DEBUG) echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: Die Kategorie '$newCategoryName' ist nicht existiert. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+                        #********** CREATE NEW CATEGORY IN DB **********#
 if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Speichere New Category in die DB... <i>(" . basename(__FILE__) . ")</i></p>\n";
 
                     // Schritt 1 DB: DB-Verbindung herstellen
@@ -540,9 +600,15 @@ if (DEBUG)              echo "<p class='debug ok'><b>Line " . __LINE__ . "</b>: 
                         // DB-Verbindung schließen
 if(DEBUG)               echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
                         unset($PDO);
+
+
+                        $success = "Die neue Kategorie mit dem Namen $newCategoryName wurde erfolgreich gespeichert";
+
+                        $newCategoryName = NULL;
                     }
-                } // CREATE NEW CATEGORY IN DB END
-        } // PROCESS NEW CATEGORY FORM END
+                } // FORM VALIDATION (DB VALIDATION) END
+            } // CREATE NEW CATEGORY IN DB END
+    } // PROCESS NEW CATEGORY FORM END
 // endregion process new category form
 #**********************************************************************************#
 // region fetch categories from DB
@@ -586,9 +652,6 @@ if(DEBUG_V)	print_r($categories);
 if(DEBUG_V)	echo "</pre>";
 */
 
-if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Categories aus DB aus... <i>(" . basename(__FILE__) . ")</i></p>\n";
-
-
 // DB-Verbindung schließen
 if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
 
@@ -605,7 +668,7 @@ unset($PDO);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Articles</title>
+    <title>Dashboard</title>
 
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/debug.css">
@@ -669,18 +732,31 @@ unset($PDO);
 
         <br>
         <span class="error"><?= $errorNewArticleTitle ?></span><br>
-        <input type="text" name="newArticleTitle" placeholder="Uberschrift"><br>
+        <input type="text" name="newArticleTitle"  value="<?= $newArticleTitle ?>" placeholder="Uberschrift"><br>
 
         <div style="width: 80%; display: inline-block">
             <div style="display: inline-block">
                 <p>Bild hochladen:</p>
+
+                <!-- -------- INFOTEXT FOR IMAGE UPLOAD START -------- -->
+                <p class="small">
+                    Erlaubt sind Bilder des Typs
+                    <?php $imageAllowedMimeTypes = implode(', ', array_keys(IMAGE_ALLOWED_MIME_TYPES)) ?>
+                    <?= strtoupper( str_replace( array('image/jpeg, ', 'image/'), '', $imageAllowedMimeTypes) ) ?>.
+                    <br>
+                    Die Bildbreite darf <?= IMAGE_MAX_WIDTH ?> Pixel nicht übersteigen.<br>
+                    Die Bildhöhe darf <?= IMAGE_MAX_HEIGHT ?> Pixel nicht übersteigen.<br>
+                    Die Dateigröße darf <?= IMAGE_MAX_SIZE/1024 ?>kB nicht übersteigen.
+                </p>
+                <!-- -------- INFOTEXT FOR IMAGE UPLOAD END -------- -->
+
                 <span class="error"><?= $errorNewArticleImageUpload ?></span><br>
                 <input type="file" name="newArticlePicture"><br>
             </div>
 
             <select name="newArticlePictureAlignment">
-                <option value="align left" <?php if( $newArticlePictureAlignment === 'align left' ) echo 'selected'?>>align left</option>
-                <option value="align right" <?php if( $newArticlePictureAlignment === 'align right' ) echo 'selected'?>>align right</option>
+                <option value="left" <?php if( $newArticlePictureAlignment === 'left' ) echo 'selected'?>>align left</option>
+                <option value="right" <?php if( $newArticlePictureAlignment === 'right' ) echo 'selected'?>>align right</option>
             </select>
         </div>
 
@@ -705,7 +781,7 @@ unset($PDO);
         <input type="hidden" name="newCategoryForm">
 
         <span class="error"><?= $errorNewCategoryName ?></span><br>
-        <input type="text" name="newCategoryName" placeholder="Name der Kategorie"><br>
+        <input type="text" name="newCategoryName" value="<?= $newCategoryName ?>" placeholder="Name der Kategorie"><br>
 
         <input style="width: 80%" type="submit" value="Neue Kategorie anlegen">
     </form>

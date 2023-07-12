@@ -144,7 +144,9 @@ if(DEBUG)		echo "<p class='debug auth ok'><b>Line " . __LINE__ . "</b>: Seitenau
     #********** INITIALIZE VARIABLES **********#
     #******************************************#
 
-    $errorLogin = NULL;
+        $errorLogin = NULL;
+
+
 
     // endregion initialize variable
 #**********************************************************************************#
@@ -353,6 +355,7 @@ if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$_GET 
 if(DEBUG_V)	print_r($_GET);
 if(DEBUG_V)	echo "</pre>";
 */
+
     #****************************************#
 
             // Schritt 1 URL: Prüfen, ob Parameter übergeben wurde
@@ -385,7 +388,138 @@ if(DEBUG)		echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Logout wird
                 } // BRANCHING END
             } // PROCESS URL PARAMETERS END
 
+            // Schritt 1 URL: Prüfen, ob Parameter übergeben wurde
+            if (isset($_GET['category']) === true) {
+if(DEBUG)	echo "<p class='debug'>🧻 <b>Line " . __LINE__ . "</b>: URL-Parameter 'category' wurde übergeben. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            // Schritt 2 URL: Parameterwert auslesen, entschärfen, DEBUG-Ausgabe
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Parameterwert wird ausgelesen und entschärft... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            $categoryUrlParameter = sanitizeString($_GET['category']);
+if(DEBUG_V)	echo "<p class='debug value'><b>Line " . __LINE__ . "</b>: \$category: $categoryUrlParameter <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+} // PROCESS URL PARAMETERS END
+
     // endregion process URL parameters
+#**********************************************************************************#
+    //region fetch articles from DB
+
+    #******************************************************#
+    #********** PROCESS FETCH CATEGORIES FROM DB **********#
+    #******************************************************#
+
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Articles aus DB aus... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+
+            // Schritt 1 DB: DB-Verbindung herstellen
+            $PDO = dbConnect(DB_NAME);
+
+            // Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
+            $sql            = 'SELECT  blogHeadline, 
+                                       blogImagePath, 
+                                       blogImageAlignment, 
+                                       blogContent, 
+                                       blogDate,
+                                       catID,
+                                       catLabel, 
+                                       userFirstName, 
+                                       userLastName 
+                                FROM blogs 
+                                INNER JOIN categories USING (catID)
+                                INNER JOIN users USING (userID)';
+
+            if (isset($categoryUrlParameter)) {
+                $sql .= 'WHERE catID = :catID';
+if(DEBUG)	    echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Articles aus DB aus. Die Einträge werden bei der Kategorie $categoryUrlParameter gefiltert <i>(" . basename(__FILE__) . ")</i></p>\n";
+                $params         = array('catID' => $categoryUrlParameter);
+            } else {
+                $sql .= 'ORDER BY blogDate DESC';
+if(DEBUG)	    echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Articles aus DB aus. Alle Einträge anzeigen<i>(" . basename(__FILE__) . ")</i></p>\n";
+                $params         = array();
+            }
+
+
+            // Schritt 3 DB: Prepared Statements
+            try {
+                $PDOStatement = $PDO->prepare($sql);
+
+                // Execute: SQL-Statement ausführen und ggf. Platzhalter füllen
+                $PDOStatement->execute($params);
+
+            } catch(PDOException $error) {
+if(DEBUG) 	echo "<p class='debug db err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
+                $dbError = 'Fehler beim Zugriff auf die Datenbank!';
+            }
+
+            // Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
+            /*
+                Bei lesenden Operationen wie SELECT und SELECT COUNT:
+                Abholen der Datensätze bzw. auslesen des Ergebnisses
+            */
+            $articles = $PDOStatement->fetchAll(PDO::FETCH_ASSOC);
+
+/*
+if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$articles <i>(" . basename(__FILE__) . ")</i>:<br>\n";
+if(DEBUG_V)	print_r($articles);
+if(DEBUG_V)	echo "</pre>";
+*/
+
+            // DB-Verbindung schließen
+            if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            unset($PDO);
+
+
+
+    //endregion fetch articles from DB
+#**********************************************************************************#
+    // region fetch categories from DB
+
+#******************************************************#
+#********** PROCESS FETCH CATEGORIES FROM DB **********#
+#******************************************************#
+
+if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Categories aus DB aus... <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            // Schritt 1 DB: DB-Verbindung herstellen
+            $PDO = dbConnect(DB_NAME);
+
+            // Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
+            $sql            = 'SELECT catID, catLabel FROM categories';
+
+            $params         = array();
+
+            // Schritt 3 DB: Prepared Statements
+            try {
+                $PDOStatement = $PDO->prepare($sql);
+
+                // Execute: SQL-Statement ausführen und ggf. Platzhalter füllen
+                $PDOStatement->execute($params);
+
+            } catch(PDOException $error) {
+if(DEBUG) 	echo "<p class='debug db err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
+                $dbError = 'Fehler beim Zugriff auf die Datenbank!';
+            }
+
+            // Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
+            /*
+                Bei lesenden Operationen wie SELECT und SELECT COUNT:
+                Abholen der Datensätze bzw. auslesen des Ergebnisses
+            */
+            $categories = $PDOStatement->fetchAll(PDO::FETCH_ASSOC);
+
+            /*
+            if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$categories <i>(" . basename(__FILE__) . ")</i>:<br>\n";
+            if(DEBUG_V)	print_r($categories);
+            if(DEBUG_V)	echo "</pre>";
+            */
+
+            // DB-Verbindung schließen
+if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
+
+            unset($PDO);
+
+    // endregion fetch categories from DB
 #**********************************************************************************#
 ?>
 
@@ -397,7 +531,7 @@ if(DEBUG)		echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Logout wird
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Articles</title>
+    <title>Blogs</title>
 
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/debug.css">
@@ -444,7 +578,8 @@ if(DEBUG)		echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Logout wird
     <!-- -------- PAGE HEADER END -------- -->
 
     <main class="fleft">
-        <h1>Index - Articles</h1>
+        <h1>PHP-Project Blog</h1>
+        <p><a href="<?php echo $_SERVER['SCRIPT_NAME']?>">Alle Einträge anzeigen</a></p>
 
 
         <!-- -------- USER MESSAGES START -------- -->
@@ -457,10 +592,37 @@ if(DEBUG)		echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Logout wird
         <?php endif ?>
         <!-- -------- USER MESSAGES END -------- -->
 
+        <?php foreach ($articles AS $article): ?>
+
+                <br>
+                <p>Kategorie: <?= $article['catLabel'] ?></p>
+                <p><?= $article['blogHeadline'] ?></p>
+                <p><?= $article['userFirstName'] ?> <?= $article['userLastName'] ?> schrieb am <?= date('d.m.Y', strtotime($article['blogDate'])) ?> um <?= date('H:m', strtotime($article['blogDate']))  ?> Uhr:</p>
+            <div>
+                <?php if($article['blogImagePath'] !== NULL): ?>
+                    <?php if($article['blogImageAlignment'] === 'left'): ?>
+                        <img class="picture fleft" src="<?= $article['blogImagePath'] ?>" alt="picture">
+                    <?php elseif ($article['blogImageAlignment'] === 'right'): ?>
+                    <img class="picture fright" src="<?= $article['blogImagePath'] ?>" alt="picture">
+                    <?php endif ?>
+                <?php endif ?>
+
+                <p><?= $article['blogContent'] ?></p>
+            <div>
+
+            </div>
+
+        <?php endforeach ?>
+
     </main>
 
     <aside class="fright">
-        <h1>Index - Categories</h1>
+        <h1>Categories</h1>
+
+        <?php foreach ($categories AS $category): ?>
+            <p><a href="?category=<?= $category['catID'] ?>"><?= $category['catLabel'] ?></a></p>
+            <br>
+        <?php endforeach ?>
 
     </aside>
 
