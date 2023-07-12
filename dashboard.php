@@ -619,43 +619,43 @@ if(DEBUG)               echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: 
 
 if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Categories aus DB aus... <i>(" . basename(__FILE__) . ")</i></p>\n";
 
-// Schritt 1 DB: DB-Verbindung herstellen
-$PDO = dbConnect(DB_NAME);
+            // Schritt 1 DB: DB-Verbindung herstellen
+            $PDO = dbConnect(DB_NAME);
 
-// Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
-$sql            = 'SELECT catID, catLabel FROM categories';
+            // Schritt 2 DB: SQL-Statement und Placeholder-Array erstellen
+            $sql            = 'SELECT catID, catLabel FROM categories';
 
-$params         = array();
+            $params         = array();
 
-// Schritt 3 DB: Prepared Statements
-try {
-    $PDOStatement = $PDO->prepare($sql);
+            // Schritt 3 DB: Prepared Statements
+            try {
+                $PDOStatement = $PDO->prepare($sql);
 
-    // Execute: SQL-Statement ausführen und ggf. Platzhalter füllen
-    $PDOStatement->execute($params);
+                // Execute: SQL-Statement ausführen und ggf. Platzhalter füllen
+                $PDOStatement->execute($params);
 
-} catch(PDOException $error) {
-    if(DEBUG) 	echo "<p class='debug db err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
-    $dbError = 'Fehler beim Zugriff auf die Datenbank!';
-}
+            } catch(PDOException $error) {
+if(DEBUG) 	echo "<p class='debug db err'><b>Line " . __LINE__ . "</b>: FEHLER: " . $error->GetMessage() . "<i>(" . basename(__FILE__) . ")</i></p>\n";
+                $dbError = 'Fehler beim Zugriff auf die Datenbank!';
+            }
 
-// Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
-/*
-    Bei lesenden Operationen wie SELECT und SELECT COUNT:
-    Abholen der Datensätze bzw. auslesen des Ergebnisses
-*/
-$categories = $PDOStatement->fetchAll(PDO::FETCH_ASSOC);
+            // Schritt 4 DB: Datenbankoperation auswerten und DB-Verbindung schließen
+            /*
+                Bei lesenden Operationen wie SELECT und SELECT COUNT:
+                Abholen der Datensätze bzw. auslesen des Ergebnisses
+            */
+            $categories = $PDOStatement->fetchAll(PDO::FETCH_ASSOC);
 
-/*
-if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$categories <i>(" . basename(__FILE__) . ")</i>:<br>\n";
-if(DEBUG_V)	print_r($categories);
-if(DEBUG_V)	echo "</pre>";
-*/
+            /*
+            if(DEBUG_V)	echo "<pre class='debug value'><b>Line " . __LINE__ . "</b>: \$categories <i>(" . basename(__FILE__) . ")</i>:<br>\n";
+            if(DEBUG_V)	print_r($categories);
+            if(DEBUG_V)	echo "</pre>";
+            */
 
-// DB-Verbindung schließen
+            // DB-Verbindung schließen
 if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung wird geschlossen. <i>(" . basename(__FILE__) . ")</i></p>\n";
 
-unset($PDO);
+            unset($PDO);
 
 // endregion fetch categories from DB
 #**********************************************************************************#

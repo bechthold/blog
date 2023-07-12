@@ -593,23 +593,25 @@ if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung 
         <!-- -------- USER MESSAGES END -------- -->
 
         <?php foreach ($articles AS $article): ?>
-
-                <br>
-                <p>Kategorie: <?= $article['catLabel'] ?></p>
-                <p><?= $article['blogHeadline'] ?></p>
-                <p><?= $article['userFirstName'] ?> <?= $article['userLastName'] ?> schrieb am <?= date('d.m.Y', strtotime($article['blogDate'])) ?> um <?= date('H:m', strtotime($article['blogDate']))  ?> Uhr:</p>
-            <div>
-                <?php if($article['blogImagePath'] !== NULL): ?>
-                    <?php if($article['blogImageAlignment'] === 'left'): ?>
-                        <img class="picture fleft" src="<?= $article['blogImagePath'] ?>" alt="picture">
-                    <?php elseif ($article['blogImageAlignment'] === 'right'): ?>
-                    <img class="picture fright" src="<?= $article['blogImagePath'] ?>" alt="picture">
+            <div class="article">
+                    <br>
+                    <p>Kategorie: <?= $article['catLabel'] ?></p>
+                    <p><?= $article['blogHeadline'] ?></p>
+                    <p><?= $article['userFirstName'] ?> <?= $article['userLastName'] ?> schrieb am <?= date('d.m.Y', strtotime($article['blogDate'])) ?> um <?= date('H:m', strtotime($article['blogDate']))  ?> Uhr:</p>
+                <div>
+                    <?php if($article['blogImagePath'] !== NULL): ?>
+                        <?php if($article['blogImageAlignment'] === 'left'): ?>
+                            <img class="picture fleft" src="<?= $article['blogImagePath'] ?>" alt="picture">
+                        <?php elseif ($article['blogImageAlignment'] === 'right'): ?>
+                        <img class="picture fright" src="<?= $article['blogImagePath'] ?>" alt="picture">
+                        <?php endif ?>
                     <?php endif ?>
-                <?php endif ?>
 
-                <p><?= $article['blogContent'] ?></p>
-            <div>
-
+                    <p><?= $article['blogContent'] ?></p>
+                    <br>
+                    <hr>
+                    <br>
+                </div>
             </div>
 
         <?php endforeach ?>
@@ -618,12 +620,12 @@ if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung 
 
     <aside class="fright">
         <h1>Categories</h1>
-
-        <?php foreach ($categories AS $category): ?>
-            <p><a href="?category=<?= $category['catID'] ?>"><?= $category['catLabel'] ?></a></p>
-            <br>
-        <?php endforeach ?>
-
+        <div class="categories">
+            <?php foreach ($categories AS $category): ?>
+                <p><a href="?category=<?= $category['catID'] ?>"><?= $category['catLabel'] ?></a></p>
+                <br>
+            <?php endforeach ?>
+        </div>
     </aside>
 
     <br>

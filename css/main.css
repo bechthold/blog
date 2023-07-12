@@ -160,6 +160,15 @@ img.picture {
 	padding: 5px;
 }
 
+.article {
+	margin-right: 100px;
+}
+
+.categories {
+
+	margin: 100px;
+}
+
 /********** USER MESSAGES STYLES **********/
 .error {
 	color: red;
@@ -221,6 +230,7 @@ popupBox a.button:hover {
 	color: black;
 	cursor: pointer;
 }
+
 
 
 
