@@ -616,7 +616,7 @@ if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung 
 						<?php endif ?>
 					<?php endif ?>
 
-						<p><?= $article['blogContent'] ?></p>
+						<p><?= nl2br($article['blogContent']) ?></p>
 						<br>
 						<hr>
 						<br>

@@ -443,8 +443,11 @@ if(DEBUG) 				echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbind
 
 							$success = 'Der beitrag wurde erfolgreich gespeichert';
 
-							$newArticleTitle = NULL;
-							$newArticleText = NULL;
+                            $newArticleCategory         = NULL;
+							$newArticleTitle            = NULL;
+                            $newArticlePictureAlignment = NULL;
+							$newArticleText             = NULL;
+
 						
 						} // CREATE NEW ARTICLE IN DB END
 						
