@@ -606,7 +606,7 @@ if(DEBUG)	echo "<p class='debug DB'><b>Line " . __LINE__ . "</b>: DB-Verbindung 
 					<br>
 					<p>Kategorie: <?= $article['catLabel'] ?></p>
 						<p><?= $article['blogHeadline'] ?></p>
-						<p><?= $article['userFirstName'] ?> <?= $article['userLastName'] ?> schrieb am <?= date('d.m.Y', strtotime($article['blogDate'])) ?> um <?= date('H:m', strtotime($article['blogDate']))  ?> Uhr:</p>
+						<p><?= $article['userFirstName'] ?> <?= $article['userLastName'] ?> schrieb am <?= date('d.m.Y', strtotime($article['blogDate'])) ?> um <?= date('H:i', strtotime($article['blogDate']))  ?> Uhr:</p>
 				<div>
 					<?php if($article['blogImagePath'] !== NULL): ?>
 						<?php if($article['blogImageAlignment'] === 'left'): ?>
