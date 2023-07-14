@@ -438,7 +438,8 @@ if(DEBUG)	echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Article
                                 INNER JOIN users USING (userID)';
 
             if (isset($categoryUrlParameter)) {
-                $sql .= 'WHERE catID = :catID';
+                $sql .= 'WHERE catID = :catID
+                         ORDER BY blogDate DESC';
 if(DEBUG)	    echo "<p class='debug'>📑 <b>Line " . __LINE__ . "</b>: Lese Articles aus DB aus. Die Einträge werden bei der Kategorie $categoryUrlParameter gefiltert <i>(" . basename(__FILE__) . ")</i></p>\n";
                 $params         = array('catID' => $categoryUrlParameter);
             } else {
